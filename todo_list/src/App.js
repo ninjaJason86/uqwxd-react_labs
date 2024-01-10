@@ -1,7 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 const App = () => {
   const [todos, setTodos] = useState([]);
+  const [todoEditing, setTodoEditing] = useState(null);
+
+  useEffect(() => {
+    const json = localStorage.getItem("todos");
+    const loadedTodos = JSON.parse(json);
+    if (loadedTodos) {
+      setTodos(loadedTodos);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (todos.length > 0) {
+      const json = JSON.stringify(todos);
+      localStorage.setItem("todos", json)
+    }
+  }, [todos]);
 
   // Add the handlesubmit code here
   function handleSubmit(e) {
@@ -45,6 +61,16 @@ const App = () => {
 
 
   // Add the submitEdits code here
+  function handleSubmitEdits(id) {
+    const updatedTodos = todos.map((todo) => {
+      if (todo.id === id) {
+        todo.text = document.getElementById(id)["value"];
+      }
+      return todo;
+    })
+    setTodos(updatedTodos);
+    setTodoEditing(null);
+  }
 
 
   return (
@@ -58,10 +84,29 @@ const App = () => {
         todos.map((todo) => (
           <div className="todo" key={todo.id}>
             <div className="todo-text">
-              {todo.text}
               <input type="checkbox" id="completed" checked={todo.completed} onChange={() => toggleComplete(todo.id)} />
+
+              {todo.id === todoEditing ?
+                (
+                  <input type="text" id={todo.id} defaultValue={todo.text} />
+                ) :
+                (
+                  todo.text
+                )
+              }
             </div>
-            <button onClick={() => deleteToDo(todo.id)}>Delete</button>
+            <div className="todo-actions">
+              {
+                todo.id === todoEditing ?
+                  (
+                    <button onClick={() => handleSubmitEdits(todo.id)}>Submit Edits</button>
+                  ) :
+                  (
+                    <button onClick={() => setTodoEditing(todo.id)}>Edit</button>
+                  )
+              }
+              <button onClick={() => deleteToDo(todo.id)}>Delete</button>
+            </div>
           </div>
         ))
       }
